@@ -35,8 +35,13 @@ def get_reservation_by_table(table: int):
 
 @app.post("/reservation")
 def reserve(reservation: Reservation):
-    data = jsonable_encoder(reservation)
-    collection.insert_one(data)
+    already_reservation = collection.find()
+    for already in already_reservation:
+        if reservation.table_number == already['table_number'] and reservation.time == already['time']:
+            return {
+                "result": "already reserved"
+            }
+    collection.insert_one(jsonable_encoder(reservation))
     return {
         "result": "Done"
     }
