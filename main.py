@@ -2,14 +2,15 @@ from msilib.schema import tables
 from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 from pydantic import BaseModel
-import uvicorn
+from fastapi.encoders import jsonable_encoder
 
 
 class Reservation(BaseModel):
-    name : str
+    name: str
     time: int
     table_number: int
-    
+
+
 client = MongoClient('mongodb://localhost', 27017)
 
 db = client["restaurants"]
@@ -32,18 +33,36 @@ def get_reservation_by_name(name:str):
     else:
         raise HTTPException(404, f"I can't find anyone who reserved this name.")
 
-@app.get("reservation/by-table/{table}")
+
+@app.get("/reservation/by-table/{table}")
 def get_reservation_by_table(table: int):
-    pass
+    r = collection.find({"table_number": table}, {"_id": 0, "name": 1, "time": 1})
+    my_result = []
+    for i in r:
+        my_result.append(i)
+    return {
+        "result": my_result
+    }
+
 
 @app.post("/reservation")
-def reserve(reservation : Reservation):
-    pass
+def reserve(reservation: Reservation):
+    data = jsonable_encoder(reservation)
+    collection.insert_one(data)
+    return {
+        "result": "Done"
+    }
+
 
 @app.put("/reservation/update/")
 def update_reservation(reservation: Reservation):
     pass
 
+
 @app.delete("/reservation/delete/{name}/{table_number}")
-def cancel_reservation(name: str, table_number : int):
-    pass
+def cancel_reservation(name: str, table_number: int):
+    query = {"name": name, "table_number": table_number}
+    collection.delete_many(query)
+    return {
+        "result": "done"
+    }
