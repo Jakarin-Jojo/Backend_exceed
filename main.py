@@ -10,10 +10,10 @@ class Reservation(BaseModel):
 client = MongoClient('mongodb://localhost', 27017)
 
 # TODO fill in database name
-db = client["<put your database name>"]
+db = client["restaurants"]
 
 # TODO fill in collection name
-collection = db["<put your collection name>"]
+collection = db["reservation"]
 
 app = FastAPI()
 
@@ -23,9 +23,16 @@ app = FastAPI()
 def get_reservation_by_name(name:str):
     pass
 
-@app.get("reservation/by-table/{table}")
+
+@app.get("/reservation/by-table/{table}")
 def get_reservation_by_table(table: int):
-    pass
+    r = collection.find({"table_number": table}, {"_id": 0, "name": 1, "time": 1})
+    my_result = []
+    for i in r:
+        my_result.append(i)
+    return {
+        "result": my_result
+    }
 
 @app.post("/reservation")
 def reserve(reservation : Reservation):
