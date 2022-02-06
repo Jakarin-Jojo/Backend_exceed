@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from msilib.schema import tables
+from fastapi import FastAPI, HTTPException
 from pymongo import MongoClient
 from pydantic import BaseModel
 from fastapi.encoders import jsonable_encoder
@@ -11,15 +12,26 @@ class Reservation(BaseModel):
 
 
 client = MongoClient('mongodb://localhost', 27017)
+
 db = client["restaurants"]
+
+
 collection = db["reservation"]
+
 app = FastAPI()
 
 
-# TODO complete all endpoint.
+
+
 @app.get("/reservation/by-name/{name}")
-def get_reservation_by_name(name: str):
-    pass
+def get_reservation_by_name(name:str):
+    result = collection.find_one({"name": name}, {"_id":0, "time":1, "table_number": 1})
+    if result != None:
+        return {
+            "result": result 
+        }
+    else:
+        raise HTTPException(404, f"I can't find anyone who reserved this name.")
 
 
 @app.get("/reservation/by-table/{table}")
