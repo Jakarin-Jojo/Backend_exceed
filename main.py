@@ -1,3 +1,4 @@
+from tabnanny import check
 from fastapi import FastAPI
 from pymongo import MongoClient
 from pydantic import BaseModel
@@ -44,7 +45,23 @@ def reserve(reservation: Reservation):
 
 @app.put("/reservation/update/")
 def update_reservation(reservation: Reservation):
-    pass
+    q1 = {
+        "time": reservation.time,
+        "table_number": reservation.table_number
+    }
+    check = collection.find_one(q1, {"_id": 0, "name": 1})
+    if (check != None):
+        return {
+            "result": "not allow"
+        }
+    else:
+        new_value = {"$set": q1}
+        collection.update_one({"name": reservation.name}, new_value)
+    return {
+        "result": "update complete"
+    }
+        
+    
 
 
 @app.delete("/reservation/delete/{name}/{table_number}")
